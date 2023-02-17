@@ -36,7 +36,7 @@ def reverse_playlist(youtube, orig_playlist_id):
             .list(
                 part="snippet",
                 playlistId=orig_playlist_id,
-                maxResults=50,
+                maxResults=5000,
                 pageToken=next_page_token,
             )
             .execute()
