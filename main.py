@@ -15,36 +15,39 @@ def reverse_playlist(youtube, playlist_id):
             pageToken=next_page_token,
         )
         playlist_response = playlist_request.execute()
-        playlist_items += playlist_response["items"]
+        playlist_items += playlist_response.get("items", [])
         next_page_token = playlist_response.get("nextPageToken")
         if not next_page_token:
             break
 
     # Create a new playlist with the opposite order
+    playlist_snippet = playlist_response.get("snippet", {})
     new_playlist_request = youtube.playlists().insert(
         part="snippet",
         body={
             "snippet": {
-                "title": "Reversed " + playlist_response["snippet"]["title"],
-                "description": playlist_response["snippet"]["description"],
+                "title": "Reversed " + playlist_snippet.get("title", ""),
+                "description": playlist_snippet.get("description", ""),
             }
         },
     )
     new_playlist_response = new_playlist_request.execute()
-    new_playlist_id = new_playlist_response["id"]
+    new_playlist_id = new_playlist_response.get("id")
 
+    # Add the videos to the new playlist in reverse order
     for item in reversed(playlist_items):
-        video_id = item["snippet"]["resourceId"]["videoId"]
-        add_video_request = youtube.playlistItems().insert(
-            part="snippet",
-            body={
-                "snippet": {
-                    "playlistId": new_playlist_id,
-                    "resourceId": {"kind": "youtube#video", "videoId": video_id},
-                }
-            },
-        )
-        add_video_request.execute()
+        video_id = item.get("snippet", {}).get("resourceId", {}).get("videoId", "")
+        if video_id:
+            add_video_request = youtube.playlistItems().insert(
+                part="snippet",
+                body={
+                    "snippet": {
+                        "playlistId": new_playlist_id,
+                        "resourceId": {"kind": "youtube#video", "videoId": video_id},
+                    }
+                },
+            )
+            add_video_request.execute()
 
     print(
         "New playlist created with the opposite order: https://www.youtube.com/playlist?list="
