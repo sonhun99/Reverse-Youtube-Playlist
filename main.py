@@ -44,7 +44,6 @@ def reverse_playlist(youtube, orig_playlist_id):
 
         for item in playlist_items_response["items"]:
             video_id = item["snippet"]["resourceId"]["videoId"]
-            print(video_id)  # Add this line to print the video ID
             videos.append(video_id)
 
         next_page_token = playlist_items_response.get("nextPageToken")
@@ -53,15 +52,19 @@ def reverse_playlist(youtube, orig_playlist_id):
 
     # Step 3: Add the videos to the new playlist in reverse order
     for video_id in reversed(videos):
-        youtube.playlistItems().insert(
-            part="snippet",
-            body={
-                "snippet": {
-                    "playlistId": new_playlist_id,
-                    "resourceId": {"kind": "youtube#video", "videoId": video_id},
-                }
-            },
-        ).execute()
+        try:
+            print(video_id)  # Add this line to print the video ID
+            youtube.playlistItems().insert(
+                part="snippet",
+                body={
+                    "snippet": {
+                        "playlistId": new_playlist_id,
+                        "resourceId": {"kind": "youtube#video", "videoId": video_id},
+                    }
+                },
+            ).execute()
+        except:
+            print(f"Error occured with the video {video_id}")
 
     print(
         "New playlist created with the opposite order: https://www.youtube.com/playlist?list="
